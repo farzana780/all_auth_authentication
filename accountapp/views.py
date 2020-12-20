@@ -1,22 +1,16 @@
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from django.shortcuts import render
+from django.contrib.auth import logout
 from django.views.decorators.csrf import csrf_exempt
-from oauth2_provider.admin import AccessToken
+from oauth2_provider.admin import AccessToken, Application, AccessTokenAdmin
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
-
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import authentication_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.renderers import JSONRenderer
-from rest_framework.response import Response
-import json
-
-from rest_framework.views import APIView
-
 from accountapp.models import CustomUser
-from accountapp.serializers import CreateUserSerializer, UserSerializer
+from accountapp.serializers import UserSerializer, ChangePasswordSerializer
+from django.http import JsonResponse
+from rest_framework import generics, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+import requests
 
 
 @csrf_exempt
@@ -31,7 +25,6 @@ def test(request):
     return JsonResponse({'user': user_serialiser.data})
 
 
-#
 # from rest_framework import generics
 #
 #
@@ -41,19 +34,6 @@ def test(request):
 #     permission_classes = (IsAuthenticated,)
 #
 #
-from django.http import JsonResponse
-from rest_framework import generics, permissions
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-
-import requests
-
-from .serializers import CreateUserSerializer
-
-
-# CLIENT_ID = '4hg70yCJtauX5h8Zd33mgJajJSRFbGMl1S7tZjGw'
-# CLIENT_SECRET = 'aZ72QZGI53Ks8gSC4LZARHaQyeN6TLbYWim4Wml7zVr6oGvzp8Kre5cnhCmVCqGuwx1UlBSmAjHCVDqxlusmNwHCBQlgKNiooXH2bASkO84ILUzvYxlbXDKbBsJjeBYU'
 
 
 # @api_view(['POST'])
@@ -97,3 +77,146 @@ def login(request):
     return Response(r.json())
 
 
+
+class ChangePasswordView(generics.UpdateAPIView):
+    """
+    An endpoint for changing password.
+    """
+    serializer_class = ChangePasswordSerializer
+    model = CustomUser
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self, queryset=None):
+        obj = self.request.user
+        return obj
+
+    def update(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            # Check old password
+            if not self.object.check_password(serializer.data.get("old_password")):
+                return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+            # set_password also hashes the password that the user will get
+            self.object.set_password(serializer.data.get("new_password"))
+            self.object.save()
+            response = {
+                'status': 'success',
+                'code': status.HTTP_200_OK,
+                'message': 'Password updated successfully',
+                'data': []
+            }
+
+            return Response(response)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# @csrf_exempt
+# def revoke_token(request):
+#     r = requests.post(
+#         'http://127.0.0.1:8000/o/revoke_token/',
+#         data={
+#             'token': '64b0BIfvzasq8hIzznWZWtM9unvQe7',
+#             'client_id': 'zk5yn8JDDjkGkAeAElrNgTE5je3EXbtUc697hZCt',
+#             'client_secret': 't1PC3bbBzv9LIJRmHGrGAn3nmkQhzBznhTwmULC2DyEdKGoI5jBKziyQhOIJSpCGxzrbI147GpGnzS7SAXmfIBKbn4igrzvZDpdL0J8tMznJ85J8dqOzGnNHgytUDORS',
+#         },
+#     )
+#     return r
+#
+
+# just make a request here
+# POST /o/revoke_token/ HTTP/1.1 Content-Type: application/x-www-form-urlencoded token=XXXX&client_id=XXXX&client_secret=XXXX
+
+# @csrf_exempt
+# def logout_user(self, request):
+#     r = requests.post(
+#         'http://127.0.0.1:8000/o/revoke_token/',
+#         data={
+#             'token': '64b0BIfvzasq8hIzznWZWtM9unvQe7',
+#             'client_id': 'zk5yn8JDDjkGkAeAElrNgTE5je3EXbtUc697hZCt',
+#             'client_secret': 't1PC3bbBzv9LIJRmHGrGAn3nmkQhzBznhTwmULC2DyEdKGoI5jBKziyQhOIJSpCGxzrbI147GpGnzS7SAXmfIBKbn4igrzvZDpdL0J8tMznJ85J8dqOzGnNHgytUDORS',
+#         },
+#     )
+#     # if succeed
+#     logout(request)
+#     response = {
+#         'status': 'success',
+#         'code': status.HTTP_200_OK,
+#         'message': 'Logged Out successfully',
+#     }
+#     return Response(response)
+
+#
+# def logout(self, request):
+#     self.logout(request)
+#     return Response({"success": ("Successfully logged out.")},
+#                     status=status.HTTP_200_OK)
+#
+#
+
+
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+
+class LogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+
+    def get(self, request, format=None):
+        token = AccessToken.objects.get(token=request.data['token'])
+        user_name = Application.objects.get(client_id=token.application.client_id)
+        Client_id = user_name.client_id
+        Client_secret = user_name.client_secret
+        r = requests.post(
+            'http://127.0.0.1:8000/o/revoke_token/',
+            data={
+                'token': request.data['token'],
+                 'client_id':  Client_id,
+                 'client_secret': Client_secret,
+            },
+        )
+        logout(request)
+        response = Response({"detail":("Successfully logged out.")},
+                            status=status.HTTP_200_OK)
+        return response
+
+
+from django.dispatch import receiver
+from django.urls import reverse
+from django_rest_passwordreset.signals import reset_password_token_created
+from django.core.mail import send_mail
+
+
+@receiver(reset_password_token_created)
+def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
+
+    email_plaintext_message = "{}?token={}".format(reverse('password_reset:reset-password-request'), reset_password_token.key)
+
+    send_mail(
+        # title:
+        "Password Reset for {title}".format(title="Forget password"),
+        # message:
+        email_plaintext_message,
+        # from:
+        "admin@gmail.com",
+        # to:
+        [reset_password_token.user.email]
+    )
+
+
+from allauth.account.utils import send_email_confirmation
+from allauth.account.models import EmailAddress
+# request a new confirmation email
+class EmailConfirmation(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = CustomUser.objects.get(email=request.data['email'])
+        email_address = EmailAddress.objects.get(email=email)
+        if email_address.verified:
+            return Response({'message': 'Email already verified'}, status=status.HTTP_201_CREATED)
+
+        send_email_confirmation(request, request.user)
+        return Response({'message': 'Email confirmation sent'}, status=status.HTTP_201_CREATED)

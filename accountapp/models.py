@@ -47,3 +47,6 @@ class CustomUser(AbstractBaseUser):
 
     class Meta:
         verbose_name_plural = 'Users'
+
+
+
