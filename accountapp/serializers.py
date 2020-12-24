@@ -1,7 +1,5 @@
-from django.forms import CharField
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ModelSerializer
+
 
 from .models import CustomUser
 

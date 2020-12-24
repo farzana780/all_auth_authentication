@@ -37,21 +37,26 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'django.contrib.sites',
 
-
+    # For Oauth Authentication
     'oauth2_provider',
+
+    # For Rest Framework
     'rest_framework',
     'rest_framework.authtoken',
+
+    # For User Registration
     'rest_auth',
     'rest_auth.registration',
 
+    # For Forgot Password reset
     'django_rest_passwordreset',
 
-
+    # My app
     'accountapp',
 
+    # Only for email verification
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -112,11 +117,24 @@ REST_FRAMEWORK = {
     ),
 }
 
+DJANGO_REST_MULTITOKENAUTH_RESET_TOKEN_EXPIRY_TIME = 1/15  # timeout after 4 minutes
+DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
+    "CLASS": "django_rest_passwordreset.tokens.RandomNumberTokenGenerator",
+    "OPTIONS": {
+        "min_length": 6,
+        "max_length": 6
+    }
+}
 
-# AUTHENTICATION_BACKENDS = (
-#     'django.contrib.auth.backends.ModelBackend', # To keep the Browsable API
-#     'oauth2_provider.backends.OAuth2Backend',
-# )
+
+
+OAUTH2_PROVIDER = {
+    # parses OAuth2 data from application/json requests
+    #'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+    'SCOPES': {'read': 'Read scope', 'write': 'Write scope', 'groups': 'Access to your groups'}
+}
+
+
 
 
 # Password validation
@@ -159,23 +177,8 @@ STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'accountapp.CustomUser'
 
-# LOGIN_URL = 'login/'
-LOGIN_REDIRECT_URL = '/'
-#
-# ACCOUNT_AUTHENTICATION_METHOD = 'email'
-# ACCOUNT_EMAIL_REQUIRED = True
-# ACCOUNT_UNIQUE_EMAIL = True
-# ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-# ACCOUNT_USERNAME_REQUIRED = False
-#
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# EMAIL_USE_TLS = True
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIT_PORT = 587
-# EMAIL_HOST_USER = 'farzanaece2k15@gmail.com'
-# EMAIL_HOST_PASSWORD = 'xjnbbyckdznvdeub'
+LOGIN_REDIRECT_URL = '/'
 
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
@@ -184,9 +187,6 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-# ACCOUNT_CONFIRM_EMAIL_ON_GET = True
-# ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = '/?verification=1'
-# ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/?verification=1'
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
