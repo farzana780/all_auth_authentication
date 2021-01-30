@@ -187,36 +187,8 @@ class UpdateEmail(APIView):
         serializer = EmailChangeSerializer(user, many=True)
         return Response(serializer.data)
 
-    #first token theke user get korben
-    #than email update korben
-    #than ager email delete kore diben
-    #if need multiple function call korben
-    #user id ei gulo token theke get korben
-    #wait ami akta method dicchi
-
-    #request.user.pk
-    #bujhte parsen??????
-    #vaia user_id token theke get hoy but user_id ar email address er ei table er id different
-    #but relation same
-    #bujhte parsen. ji vaia
-    #aj kintu sesh korben . ji
-
 
     def patch(self, request, format=None):
-
-        user_id = request.user.pk #okay
-
-        #ekhane update delete sob korben by using token
-
-        #i hope you are understand . ji vaia bujhte peresi ar problem hole janabo
-        #kaj ajke sesh korben
-        #best of luck
-
-        #by default verified thakar kotha na????ji vaia eta thik korte hobe
-        #hmm koren
-
-
-        #Key 68247  5ta keno???? 6 ta howar kotha na???? try koren keno hocche na .ji
 
         token = AccessToken.objects.get(token=request.data['token'])
         user_object = CustomUser.objects.get(id=token.user_id)
@@ -232,10 +204,3 @@ class UpdateEmail(APIView):
         send_email_confirmation(request, request.user)
         return Response({'message': 'Email confirmation sent'}, status=status.HTTP_201_CREATED)
 
-
-'''
-hoyni kicchu????
-*1. email change korar somoy ami just token & new email dibo. baki kaj web app kore felbe. 
-*2. just 1 ta api call hobe
-*3. sign up thik koren 
-'''
