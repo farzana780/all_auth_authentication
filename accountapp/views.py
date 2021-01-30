@@ -6,9 +6,9 @@ from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from rest_framework.decorators import authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from accountapp.models import CustomUser
-from accountapp.serializers import UserSerializer, ChangePasswordSerializer
+from accountapp.serializers import UserSerializer, ChangePasswordSerializer, EmailChangeSerializer
 from django.http import JsonResponse
-from rest_framework import generics
+from rest_framework import generics, serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework import status
@@ -19,7 +19,9 @@ import requests
 @authentication_classes([OAuth2Authentication])
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
-def test(request):
+def User_data(request):
+    user_id = request.user.pk
+
     token = AccessToken.objects.get(token=request.data['token'])
     users = CustomUser.objects.get(id=token.user_id)
     user_serialiser = UserSerializer(users, many=False)
@@ -102,6 +104,9 @@ class ChangePasswordView(generics.UpdateAPIView):
 
 
 
+
+
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -160,6 +165,7 @@ from allauth.account.utils import send_email_confirmation
 from allauth.account.models import EmailAddress
 
 
+
 class EmailConfirmation(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -172,3 +178,64 @@ class EmailConfirmation(APIView):
         return Response({'message': 'Email confirmation resent'}, status=status.HTTP_201_CREATED)
 
 
+
+class UpdateEmail(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, format=None):
+        user = EmailAddress.objects.all()
+        serializer = EmailChangeSerializer(user, many=True)
+        return Response(serializer.data)
+
+    #first token theke user get korben
+    #than email update korben
+    #than ager email delete kore diben
+    #if need multiple function call korben
+    #user id ei gulo token theke get korben
+    #wait ami akta method dicchi
+
+    #request.user.pk
+    #bujhte parsen??????
+    #vaia user_id token theke get hoy but user_id ar email address er ei table er id different
+    #but relation same
+    #bujhte parsen. ji vaia
+    #aj kintu sesh korben . ji
+
+
+    def patch(self, request, format=None):
+
+        user_id = request.user.pk #okay
+
+        #ekhane update delete sob korben by using token
+
+        #i hope you are understand . ji vaia bujhte peresi ar problem hole janabo
+        #kaj ajke sesh korben
+        #best of luck
+
+        #by default verified thakar kotha na????ji vaia eta thik korte hobe
+        #hmm koren
+
+
+        #Key 68247  5ta keno???? 6 ta howar kotha na???? try koren keno hocche na .ji
+
+        token = AccessToken.objects.get(token=request.data['token'])
+        user_object = CustomUser.objects.get(id=token.user_id)
+        user_email = EmailAddress.objects.get(user=user_object.id)
+        user_email.verified = False
+        user_object.email = request.data.get("email", user_object.email)
+        user_object.save()
+        serializer = EmailChangeSerializer(user_email, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        request.user = user_object
+
+        send_email_confirmation(request, request.user)
+        return Response({'message': 'Email confirmation sent'}, status=status.HTTP_201_CREATED)
+
+
+'''
+hoyni kicchu????
+*1. email change korar somoy ami just token & new email dibo. baki kaj web app kore felbe. 
+*2. just 1 ta api call hobe
+*3. sign up thik koren 
+'''

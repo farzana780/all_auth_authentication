@@ -24,7 +24,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser):
     email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
-    first_name = models.CharField(max_length=255, verbose_name='Fast Name', default='admin')
+    first_name = models.CharField(max_length=255, verbose_name='Fast Name')
     hobby = models.CharField(max_length=255, verbose_name='Hobby')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)

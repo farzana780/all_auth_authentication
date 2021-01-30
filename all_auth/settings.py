@@ -121,8 +121,8 @@ DJANGO_REST_MULTITOKENAUTH_RESET_TOKEN_EXPIRY_TIME = 1/15  # timeout after 4 min
 DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
     "CLASS": "django_rest_passwordreset.tokens.RandomNumberTokenGenerator",
     "OPTIONS": {
-        "min_length": 6,
-        "max_length": 6
+        "min_number": 100000,
+        "max_number": 999999,
     }
 }
 
@@ -190,3 +190,5 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+ACCOUNT_ADAPTER = 'accountapp.adapters.CustomUserAccountAdapter'
